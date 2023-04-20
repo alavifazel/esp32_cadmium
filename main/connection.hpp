@@ -8,7 +8,7 @@
 using std::to_string;
 using std::string;
 
-namespace cadmium::example::gpt {
+namespace cadmium::iot {
     struct ConnectionState {
 		double clock;
         double sigma;

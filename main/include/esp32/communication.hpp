@@ -38,7 +38,7 @@
 
 #define CONFIG_EXAMPLE_IPV4 1
 
-namespace cadmium::example::gpt {
+namespace cadmium::iot {
 
 enum Phase {
     WAITING_FOR_DATA,

@@ -5,7 +5,7 @@
 #include "device.hpp"
 #include "connection.hpp"
 
-namespace cadmium::example::gpt {
+namespace cadmium::iot {
 
 	struct TopLevelModel : public Coupled {
 

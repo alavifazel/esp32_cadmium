@@ -21,13 +21,10 @@
 #include <string>
 #include "top.hpp"
 
-using namespace cadmium::example::gpt;
+using namespace cadmium::iot;
 
 extern "C" void app_main()
 {
-    /* Configure the peripheral according to the LED type */
-    configure_led();
-
     auto model = std::make_shared<TopLevelModel>("top");
     cadmium::ChronoClock clock;
     auto realTimeRootCoordinator = cadmium::RealTimeRootCoordinator<cadmium::ChronoClock<std::chrono::steady_clock>>(model, clock);
