@@ -12,8 +12,8 @@ using std::to_string;
 enum DevicePhase
 {
     IDLE,
-    ROTATING_LEFT,
-    ROTATING_RIGHT
+    ROTATING_CW,
+    ROTATING_CCW
 };
 
 namespace cadmium::iot
@@ -25,8 +25,7 @@ namespace cadmium::iot
         DevicePhase phase;
         int testingLogDuration;
         std::string testingLogData;
-        bool handledSigma;
-        DeviceState(DevicePhase phase) : clock(), sigma(), phase(phase), handledSigma(false) {}
+        DeviceState(DevicePhase phase) : clock(), sigma(), phase(phase) {}
     };
 
     std::ostream &operator<<(std::ostream &out, const DeviceState &s)
@@ -59,24 +58,22 @@ namespace cadmium::iot
         {
 
             std::string data = inData->getBag().back();
-            if (data == "ROTATE_LEFT")
+            if (data == "ROTATE_CW")
             {
-                s.phase = ROTATING_LEFT;
-                esp32COM.log("State: ROTATING_LEFT");
+                s.phase = ROTATING_CW;
+                esp32COM.log("State: ROTATING_CW");
                 s.sigma = 10;
             }
-            if (data == "ROTATE_RIGHT")
+            if (data == "ROTATE_CCW")
             {
-                esp32COM.log("State: ROTATING_RIGHT");
-                s.phase = ROTATING_RIGHT;
+                esp32COM.log("State: ROTATING_CCW");
+                s.phase = ROTATING_CCW;
                 s.sigma = 10;
             }
 
         }
 
-        void output(const DeviceState &s) const override
-        {
-        }
+        void output(const DeviceState &s) const override {}
 
         [[nodiscard]] double timeAdvance(const DeviceState &s) const override
         {
