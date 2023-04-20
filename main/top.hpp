@@ -2,14 +2,20 @@
 #define CADMIUM_EXAMPLE_TOP_LEVEL_HPP_
 
 #include <include/cadmium/modeling/devs/coupled.hpp>
+#include "connection.hpp"
 #include "device.hpp"
 
-namespace cadmium::iot {
+namespace cadmium::iot
+{
 
-	struct TopLevelModel : public Coupled {
+	struct TopLevelModel : public Coupled
+	{
 
-		TopLevelModel(const std::string& id) : Coupled(id) {
+		TopLevelModel(const std::string &id) : Coupled(id)
+		{
+			auto conn = addComponent<Connection>("connection");
 			auto dev = addComponent<Device>("device");
+			addCoupling(conn->outData, dev->inData);
 		}
 	};
 }

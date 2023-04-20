@@ -6,92 +6,83 @@
 #include <iostream>
 #include <string>
 
-using std::to_string;
 using std::string;
+using std::to_string;
 
-
-enum DevicePhase {
-	IDLE,
-	ROTATING_LEFT,
-	ROTATING_RIGHT
+enum DevicePhase
+{
+    IDLE,
+    ROTATING_LEFT,
+    ROTATING_RIGHT
 };
 
-namespace cadmium::iot {
-	//! Class for representing the Device DEVS model state.
-	struct DeviceState {
-		double clock;
-		double sigma;
-		DevicePhase phase;
+namespace cadmium::iot
+{
+    struct DeviceState
+    {
+        double clock;
+        double sigma;
+        DevicePhase phase;
+        int testingLogDuration;
+        std::string testingLogData;
+        bool handledSigma;
+        DeviceState(DevicePhase phase) : clock(), sigma(), phase(phase), handledSigma(false) {}
+    };
 
-		// Testing Log
-		int testingLogDuration;
-		std::string testingLogData;
-		DeviceState(DevicePhase phase): clock(), sigma(), phase(phase) {}
-	};
+    std::ostream &operator<<(std::ostream &out, const DeviceState &s)
+    {
+        return out;
+    }
 
-	std::ostream& operator<<(std::ostream& out, const DeviceState& s) {
-		return out;
-	}
+    class Device : public Atomic<DeviceState>
+    {
+    public:
+        ESP32COM<Device> esp32COM;
+        Port<std::string> inData;
+        DeviceState &getState() { return state; }
 
-	class Device : public Atomic<DeviceState> {
+        Device(const std::string &id) : Atomic<DeviceState>(id, DeviceState(DevicePhase::IDLE)), esp32COM("Device")
 
-	 public:
-		ESP32COM<Device> esp32COM;
-		
-        DeviceState& getState() { return state; }
+        {
+			inData = addInPort<std::string>("inData");            
+            esp32COM.log("State: IDLE");
+        }
 
-		Device(const std::string& id): 
-					Atomic<DeviceState>(id, DeviceState(DevicePhase::IDLE)),
-					esp32COM(this, "Device", "my_ssid", "", 5000)
+        void internalTransition(DeviceState &s) const override
+        {
+            esp32COM.log("State: IDLE");
+            s.phase = IDLE;
+            s.sigma = 1;
+        }
 
-		{
-			esp32COM.log("State: IDLE");
-		}
+        void externalTransition(DeviceState &s, double e) const override
+        {
 
-		void internalTransition(DeviceState& s) const override {
-                                esp32COM.log("State: IDLE");
-                    s.phase = DevicePhase::IDLE;
-                    s.sigma = 10;
-            // switch(s.phase) {
-            //     case IDLE:
-            //         esp32COM.log("State: IDLE");
-            //         s.phase = DevicePhase::IDLE;
-            //         s.sigma = 1;
-            //         break;
-            //     case ROTATING_LEFT:
-            //         esp32COM.log("State: ROTATING_LEFT. Duration = 5s");
-            //         break;
-            //     case ROTATING_RIGHT:
-            //         esp32COM.log("State: ROTATING_RIGHT. Duration = 5s");
-            //         s.sigma = 5;
-            //         break;                    
-
-
-            // }
-		}
-		
-		void externalTransition(DeviceState& s, double e) const override {
-            std::string data = esp32COM.tcpServerState.getData();
-            if(data == "ROTATE_LEFT") {
+            std::string data = inData->getBag().back();
+            if (data == "ROTATE_LEFT")
+            {
                 s.phase = ROTATING_LEFT;
-                s.sigma = 5;
-
-            } else if (data == "ROTATE_RIGHT") {
+                esp32COM.log("State: ROTATING_LEFT");
+                s.sigma = 10;
+            }
+            if (data == "ROTATE_RIGHT")
+            {
+                esp32COM.log("State: ROTATING_RIGHT");
                 s.phase = ROTATING_RIGHT;
-                s.sigma = 5;
+                s.sigma = 10;
             }
 
+        }
 
-		}
+        void output(const DeviceState &s) const override
+        {
+        }
 
-		void output(const DeviceState& s) const override {
-
-		}
-
-		[[nodiscard]] double timeAdvance(const DeviceState& s) const override {
-			return s.sigma;
-		}
-	};
+        [[nodiscard]] double timeAdvance(const DeviceState &s) const override
+        {
+            return s.sigma;
+        }
+    };
 }
 
 #endif

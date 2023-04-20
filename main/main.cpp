@@ -27,8 +27,7 @@ extern "C" void app_main()
 {
     auto model = std::make_shared<TopLevelModel>("top");
     cadmium::ChronoClock clock;
-    auto realTimeRootCoordinator = cadmium::RealTimeRootCoordinator<cadmium::ChronoClock<std::chrono::steady_clock>>(model, clock);
-    // And finally, we run the simulation
+    auto realTimeRootCoordinator = cadmium::RealTimeRootCoordinator<cadmium::ChronoClock<std::chrono::steady_clock> >(model, clock);
     realTimeRootCoordinator.start();
     realTimeRootCoordinator.simulate(std::numeric_limits<double>::infinity());
     realTimeRootCoordinator.stop();
