@@ -9,10 +9,11 @@
 using std::to_string;
 using std::string;
 
+
 enum DevicePhase {
-	AWAITING_REQUEST,
-	TESTING_LOG
-	// TESTING_AP
+	IDLE,
+	ROTATING_LEFT,
+	ROTATING_RIGHT
 };
 
 namespace cadmium::iot {
@@ -35,64 +36,52 @@ namespace cadmium::iot {
 	class Device : public Atomic<DeviceState> {
 
 	 public:
-		Port<std::string> inData;
 		ESP32COM<Device> esp32COM;
+		
+        DeviceState& getState() { return state; }
 
 		Device(const std::string& id): 
-					Atomic<DeviceState>(id, DeviceState(DevicePhase::AWAITING_REQUEST)),
-					esp32COM("tag", "Init message", this)
-		{
-				inData = addInPort<std::string>("inData");
-    			gpio_reset_pin((gpio_num_t)BLINK_GPIO);
-  			    gpio_set_direction((gpio_num_t)BLINK_GPIO, GPIO_MODE_OUTPUT);
-		}
+					Atomic<DeviceState>(id, DeviceState(DevicePhase::IDLE)),
+					esp32COM(this, "Device", "my_ssid", "", 5000)
 
-		void handleCommand(DeviceState& s, double e, std::string command, std::string parameters) const {
-			if(command == "LOG") {
-				s.phase = DevicePhase::TESTING_LOG;
-				size_t interval = std::stoi(parameters.substr(0, parameters.find("/")));
-				std::string msg = parameters.substr(parameters.find("/") + 1, parameters.size());
-				s.testingLogDuration = interval;
-				s.sigma = 1;
-				s.testingLogData = msg;
-			} else if (false) {
-				// ..
-			} else {
-				esp32COM.log("<< ERROR: Invalid command! >> ");
-			}
+		{
+			esp32COM.log("State: IDLE");
 		}
 
 		void internalTransition(DeviceState& s) const override {
-			switch(s.phase) {
-				case DevicePhase::TESTING_LOG:
-					if(s.testingLogDuration == 0) { 
-						s.phase = DevicePhase::AWAITING_REQUEST;
-						esp32COM.log("Done testing. Waiting for a new request.");
+                                esp32COM.log("State: IDLE");
+                    s.phase = DevicePhase::IDLE;
+                    s.sigma = 10;
+            // switch(s.phase) {
+            //     case IDLE:
+            //         esp32COM.log("State: IDLE");
+            //         s.phase = DevicePhase::IDLE;
+            //         s.sigma = 1;
+            //         break;
+            //     case ROTATING_LEFT:
+            //         esp32COM.log("State: ROTATING_LEFT. Duration = 5s");
+            //         break;
+            //     case ROTATING_RIGHT:
+            //         esp32COM.log("State: ROTATING_RIGHT. Duration = 5s");
+            //         s.sigma = 5;
+            //         break;                    
 
-					} else {
-						s.testingLogDuration -= 1;
-						esp32COM.log(s.testingLogData.c_str());
-					}
-					s.sigma = 1;
-					break;
-				default:
-					s.sigma = 1;
-					break;
-			}
+
+            // }
 		}
 		
 		void externalTransition(DeviceState& s, double e) const override {
-			if (!inData->empty()) {
-				std::string data = inData->getBag().back();
-				std::string command, parameters;
-				command = data.substr(0, data.find(':'));
-				parameters = data.substr(data.find(':')+1, data.size());
-				esp32COM.log("<< Command received >> ");
-				esp32COM.log(command.c_str());
-				esp32COM.log("<< Parameters >> ");
-				esp32COM.log(parameters.c_str());
-				handleCommand(s, e, command, parameters);
-			}
+            std::string data = esp32COM.tcpServerState.getData();
+            if(data == "ROTATE_LEFT") {
+                s.phase = ROTATING_LEFT;
+                s.sigma = 5;
+
+            } else if (data == "ROTATE_RIGHT") {
+                s.phase = ROTATING_RIGHT;
+                s.sigma = 5;
+            }
+
+
 		}
 
 		void output(const DeviceState& s) const override {

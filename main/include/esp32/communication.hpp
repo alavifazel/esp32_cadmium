@@ -31,11 +31,10 @@
 #define EXAMPLE_MAX_STA_CONN       4
 // #define WIFI_CONNECTED_BIT BIT0
 // #define WIFI_FAIL_BIT      BIT1
-#define PORT                        4000
 #define KEEPALIVE_IDLE              4000
 #define KEEPALIVE_INTERVAL          4000
 #define KEEPALIVE_COUNT             4000
-
+#define PORT 4000
 #define CONFIG_EXAMPLE_IPV4 1
 
 namespace cadmium::iot {
@@ -54,18 +53,19 @@ protected:
     class TCPServerState {
         private:
             int addrFamily;
-            bool dataAvailable;
+            bool dataIsAvailable;
             std::string data;
             double sigma;
+            int port;
             T  *connection;
         public:
-            TCPServerState(int addrFamily, T *connection)
-                    : addrFamily{addrFamily}, dataAvailable{false}, data{}, sigma{1}, connection{connection} {}
+            TCPServerState(int addrFamily, T *connection, int port)
+                    : addrFamily{addrFamily}, dataIsAvailable{false}, data{}, sigma{1}, port(port), connection{connection} {}
             int getAddrFamily() const { return this->addrFamily; }
-            bool getDataAvailability() const { 
-                return this->dataAvailable;
+            bool dataAvailable() const { 
+                return this->dataIsAvailable;
             }
-            void setDataAvailability(bool b) { this->dataAvailable = b; }
+            void setDataAvailability(bool b) { this->dataIsAvailable = b; }
             void setData(char data[]) { this->data = data; }
             std::string getData() const { 
                 // dataAvailable = false;
@@ -74,15 +74,15 @@ protected:
             double getSigma() const { return this->sigma; } 
             void setSigma(double s) { this->sigma = sigma; }
             T* getConnection() { return connection; }
+            int getPort() { return this->port; }
+            void setPort(int port) { this->port = port; }
 
     };
 
     //_______________________________
     //_____________end_______________
 
-
     const char* tag;
-    TCPServerState tcpServerState;
 
     // Used by the station setup function
     static EventGroupHandle_t s_wifi_event_group;
@@ -95,18 +95,25 @@ protected:
                 // ESP_LOGI(TAG, "station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
             } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
                 wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-                // ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
             }
     }
     
 public:
-    ESP32COM(const char* tag, const char* logInitMsg, T *obj)
-        : tag{tag}, tcpServerState(AF_INET, obj) {
-	    ESP_LOGI(tag, "%s", "logInitMsg");
+    TCPServerState tcpServerState;
+
+    
+    ESP32COM(T *obj, const char* tag, const char* ssid, const char* pwd, int tcpPort)
+        : tag{tag}, tcpServerState(AF_INET, obj, tcpPort)     {
+            WifiAPSetup(ssid, pwd);
+            TCPServerSetup();
     }
 
     void log(const char* msg) const {
         ESP_LOGI(tag, "%s", msg);
+    }
+    
+    void log(std::string msg) const {
+        ESP_LOGI(tag, "%s", msg.c_str());
     }
 
     void WifiAPSetup(const char* ssid, const char* pwd, int channel=1, int maxSTAConn=4)
@@ -151,8 +158,9 @@ public:
         //         EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
 
     }
+
     void TCPServerSetup() {
-        xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)&tcpServerState, 5, NULL);
+        xTaskCreate(tcp_server_task, "tcp_server", tcpServerState.getPort(), (void*)&tcpServerState, 5, NULL);
     }
 
     static double getTime() {
@@ -168,7 +176,7 @@ public:
 
     static inline double timeReference;
 
-    static void do_retransmit(const int sock, TCPServerState* state)
+        static void do_retransmit(const int sock, TCPServerState* state)
     {
         int len;
         char rx_buffer[128];
@@ -182,6 +190,7 @@ public:
             } else {
                 rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
                 ESP_LOGI("TAG", "Received %d bytes: %s", len, rx_buffer);
+                state->setDataAvailability(true); 
                 state->setData(rx_buffer);
                 // send() can return less bytes than supplied length.
                 // Walk-around for robust implementation.
@@ -258,7 +267,7 @@ public:
                 ESP_LOGE("TAG", "IPPROTO: %d", addr_family);
                 goto CLEAN_UP;
             }
-            ESP_LOGI("TAG", "Socket bound, port %d", PORT);
+            // ESP_LOGI("TAG", "Socket bound, port %d", PORT);
 
             err = listen(listen_sock, 1);
             if (err != 0) {
