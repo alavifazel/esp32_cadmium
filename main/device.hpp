@@ -36,7 +36,7 @@ namespace cadmium::iot
     class Device : public Atomic<DeviceState>
     {
     public:
-        ESP32COM<Device> esp32COM;
+        ESP32COM esp32COM;
         Port<std::string> inData;
         DeviceState &getState() { return state; }
 
