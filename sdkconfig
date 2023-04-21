@@ -722,15 +722,6 @@ CONFIG_LCD_PANEL_IO_FORMAT_BUF_SIZE=32
 # end of LCD and Touch Panel
 
 #
-# ESP Memory Management
-#
-
-#
-# MMAP Configuration
-#
-# end of ESP Memory Management
-
-#
 # ESP NETIF Adapter
 #
 CONFIG_ESP_NETIF_IP_LOST_TIMER_INTERVAL=120
@@ -776,7 +767,6 @@ CONFIG_ESP_PHY_CALIBRATION_MODE=0
 # ESP Ringbuf
 #
 # CONFIG_RINGBUF_PLACE_FUNCTIONS_INTO_FLASH is not set
-# CONFIG_RINGBUF_PLACE_ISR_FUNCTIONS_INTO_FLASH is not set
 # end of ESP Ringbuf
 
 #
@@ -791,6 +781,12 @@ CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=160
 # Memory
 #
 # CONFIG_ESP32_USE_FIXED_STATIC_RAM_SIZE is not set
+
+#
+# Non-backward compatible options
+#
+# CONFIG_ESP_SYSTEM_ESP32_SRAM1_REGION_AS_IRAM is not set
+# end of Non-backward compatible options
 # end of Memory
 
 #
@@ -923,12 +919,19 @@ CONFIG_ESP_WIFI_MBEDTLS_CRYPTO=y
 CONFIG_ESP_WIFI_MBEDTLS_TLS_CLIENT=y
 # CONFIG_ESP_WIFI_WAPI_PSK is not set
 # CONFIG_ESP_WIFI_SUITE_B_192 is not set
-# CONFIG_ESP_WIFI_WPS_STRICT is not set
 # CONFIG_ESP_WIFI_11KV_SUPPORT is not set
 # CONFIG_ESP_WIFI_MBO_SUPPORT is not set
 # CONFIG_ESP_WIFI_DPP_SUPPORT is not set
 # CONFIG_ESP_WIFI_11R_SUPPORT is not set
 # CONFIG_ESP_WIFI_WPS_SOFTAP_REGISTRAR is not set
+
+#
+# WPS Configuration Options
+#
+# CONFIG_ESP_WIFI_WPS_STRICT is not set
+# CONFIG_ESP_WIFI_WPS_PASSPHRASE is not set
+# end of WPS Configuration Options
+
 # CONFIG_ESP_WIFI_DEBUG_PRINT is not set
 # CONFIG_ESP_WIFI_TESTING_OPTIONS is not set
 # end of Wi-Fi
@@ -1577,6 +1580,8 @@ CONFIG_WIFI_PROV_STA_ALL_CHANNEL_SCAN=y
 # end of Wi-Fi Provisioning Manager
 # end of Component config
 
+# CONFIG_IDF_EXPERIMENTAL_FEATURES is not set
+
 # Deprecated options for backward compatibility
 # CONFIG_APP_BUILD_TYPE_ELF_RAM is not set
 # CONFIG_NO_BLOBS is not set
@@ -1727,12 +1732,12 @@ CONFIG_WPA_MBEDTLS_CRYPTO=y
 CONFIG_WPA_MBEDTLS_TLS_CLIENT=y
 # CONFIG_WPA_WAPI_PSK is not set
 # CONFIG_WPA_SUITE_B_192 is not set
-# CONFIG_WPA_WPS_STRICT is not set
 # CONFIG_WPA_11KV_SUPPORT is not set
 # CONFIG_WPA_MBO_SUPPORT is not set
 # CONFIG_WPA_DPP_SUPPORT is not set
 # CONFIG_WPA_11R_SUPPORT is not set
 # CONFIG_WPA_WPS_SOFTAP_REGISTRAR is not set
+# CONFIG_WPA_WPS_STRICT is not set
 # CONFIG_WPA_DEBUG_PRINT is not set
 # CONFIG_WPA_TESTING_OPTIONS is not set
 # CONFIG_ESP32_ENABLE_COREDUMP_TO_FLASH is not set
