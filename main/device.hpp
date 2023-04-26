@@ -40,18 +40,17 @@ namespace cadmium::iot
         Port<std::string> inData;
         DeviceState &getState() { return state; }
 
-        Device(const std::string &id) : Atomic<DeviceState>(id, DeviceState(DevicePhase::IDLE)), esp32COM("Device")
+        Device(const std::string &id) : Atomic<DeviceState>(id, DeviceState(DevicePhase::IDLE))
 
         {
-			inData = addInPort<std::string>("inData");            
-            esp32COM.log("State: IDLE");
+			inData = addInPort<std::string>("inData");
         }
 
         void internalTransition(DeviceState &s) const override
         {
-            esp32COM.log("State: IDLE");
+            esp32COM.log("<State> IDLE");
             s.phase = IDLE;
-            s.sigma = 1;
+            s.sigma = std::numeric_limits<double>::max();
         }
 
         void externalTransition(DeviceState &s, double e) const override
@@ -61,14 +60,14 @@ namespace cadmium::iot
             if (data == "ROTATE_CW")
             {
                 s.phase = ROTATING_CW;
-                esp32COM.log("State: ROTATING_CW");
-                s.sigma = 10;
+                esp32COM.log("<State> ROTATING_CW");
+                s.sigma = 4;
             }
             if (data == "ROTATE_CCW")
             {
-                esp32COM.log("State: ROTATING_CCW");
+                esp32COM.log("<State> ROTATING_CCW");
                 s.phase = ROTATING_CCW;
-                s.sigma = 10;
+                s.sigma = 4;
             }
 
         }

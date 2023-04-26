@@ -97,19 +97,16 @@ namespace cadmium::iot
     class ESP32COM
     {
     public:
-        ESP32COM(const char *tag)
-            : tag{tag}
-        {
-        }
+        ESP32COM(){}
 
         void log(const char *msg) const
         {
-            ESP_LOGI(tag, "%s", msg);
+            ESP_LOGI("LOG", "%s", msg);
         }
 
         void log(std::string msg) const
         {
-            ESP_LOGI(tag, "%s", msg.c_str());
+            ESP_LOGI("LOG", "%s", msg.c_str());
         }
 
         //____________GPIO______________
@@ -134,8 +131,6 @@ namespace cadmium::iot
         //_____________END______________
 
     protected:
-        const char *tag;
-
         void printChipInfo()
         {
             /* Print chip information */
